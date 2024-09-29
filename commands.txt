@@ -5,3 +5,8 @@ python -m cli.train -cp conf/finetune run_name=5th_run model=moirai_1.0_R_small 
 python -m cli.eval run_name=example_eval_1 model=moirai_1.0_R_small model.patch_size=32 model.context_length=720 data=load_data_eval
 
 python -m cli.eval run_name=example_eval_1 model=moirai_lightning_ckpt model.patch_size=32 model.context_length=720 data=load_data_eval
+
+# dataset URLs for CURL
+https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/Publications/Statistics/2023/monthly_hourly_load_values_2023.csv
+
+https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/Publications/Statistics/2024/monthly_hourly_load_values_2024.csv
