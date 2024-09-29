@@ -133,10 +133,15 @@ class EvalCrop(MapFuncMixin, Transformation):
     def _get_boundaries(self, data_entry: dict[str, Any]) -> tuple[int, int]:
         field: list[UnivarTimeSeries] = data_entry[self.fields[0]]
         time = field[0].shape[0]
+        # print(f"Time: {time}")
         window = data_entry["window"]
+        # print(f"Window: {window}")
         fcst_start = self.offset + window * self.distance
+        # print(f"Forecast Start: {fcst_start}")
         a = fcst_start - self.context_length
+        # print(f"a: {a}")
         b = fcst_start + self.prediction_length
+        # print(f"b:){b}")
 
         if self.offset >= 0:
             assert time >= b > a >= 0

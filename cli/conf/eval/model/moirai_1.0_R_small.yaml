@@ -1,7 +1,7 @@
 _target_: uni2ts.model.moirai.MoiraiForecast
 module:
   _target_: uni2ts.model.moirai.MoiraiModule.from_pretrained
-  pretrained_model_name_or_path: Salesforce/moirai-1.0-R-small
+  pretrained_model_name_or_path: moirai_small_weights
 num_samples: 100
 patch_size: ???
 context_length: ???

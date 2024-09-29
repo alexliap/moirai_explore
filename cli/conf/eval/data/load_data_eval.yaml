@@ -1,0 +1,7 @@
+_target_: uni2ts.eval_util.data.get_custom_eval_dataset
+dataset_name: Load_Data_eval
+offset: 6000
+windows: 32
+distance: 168
+prediction_length: 168
+mode: null
