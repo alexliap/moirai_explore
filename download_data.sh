@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo echo "CUSTOM_DATA_PATH=custom_data" >> .env
+
 # Define the URLs for the files to download
 FILE_URL_1="https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/Publications/Statistics/2023/monthly_hourly_load_values_2023.csv"
 FILE_URL_2="https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/Publications/Statistics/2024/monthly_hourly_load_values_2024.csv"
