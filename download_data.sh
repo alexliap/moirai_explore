@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo echo "CUSTOM_DATA_PATH=custom_data" >> .env
+echo "CUSTOM_DATA_PATH=custom_data" >> .env
 
 # Define the URLs for the files to download
 FILE_URL_1="https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/Publications/Statistics/2023/monthly_hourly_load_values_2023.csv"
@@ -15,8 +15,11 @@ if [ ! -d "$DEST_DIR" ]; then
 fi
 
 # Download the files using curl
-curl -o "$DEST_DIR/file1.txt" "$FILE_URL_1"
-curl -o "$DEST_DIR/file2.txt" "$FILE_URL_2"
+curl -o "$DEST_DIR/load_values_23.csv" "$FILE_URL_1"
+curl -o "$DEST_DIR/load_values_24.csv" "$FILE_URL_2"
+
+echo "Merge data..."
+python -m merge_data.py
 
 # Inform the user that the download is complete
 echo "Files have been downloaded to $DEST_DIR"

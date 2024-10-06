@@ -128,7 +128,7 @@ def main(cfg: DictConfig):
     model.freeze()
     
     # unfreeze last encoder layer
-    for param in model.module.encoder.layers[-1].ffn.parameters():
+    for param in model.module.encoder.layers[-1].parameters():
         param.requires_grad = True
     
     # # unfreeze weighted average weigths

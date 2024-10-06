@@ -6,7 +6,7 @@ defaults:
   - data: load_data
   - val_data: load_data
   - _self_
-run_name: 1st_run
+run_name: null
 seed: 0
 tf32: true
 compile: false  # set to mode: default, reduce-overhead, max-autotune
@@ -36,11 +36,11 @@ trainer:
     - _target_: lightning.pytorch.callbacks.EarlyStopping
       monitor: val/PackedMSELoss
       min_delta: 1000
-      patience: 5
+      patience: 15
       mode: min
       strict: false
       verbose: true
-  max_epochs: 20
+  max_epochs: 40
   enable_progress_bar: true
   accumulate_grad_batches: 1
   gradient_clip_val: 1.0
