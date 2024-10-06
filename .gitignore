@@ -170,3 +170,4 @@ moirai_base_weights/
 moirai_large_weights/
 *.csv
 *.png
+custom_data/
