@@ -1,5 +1,7 @@
 #!/bin/bash
 
+python -m pip install -e '.[notebook]'
+
 echo "CUSTOM_DATA_PATH=custom_data" >> .env
 
 # Define the URLs for the files to download
@@ -19,7 +21,7 @@ curl -o "$DEST_DIR/load_values_23.csv" "$FILE_URL_1"
 curl -o "$DEST_DIR/load_values_24.csv" "$FILE_URL_2"
 
 echo "Merge data..."
-python -m merge_data.py
+python -m merge_data
 
 # Inform the user that the download is complete
 echo "Files have been downloaded to $DEST_DIR"
