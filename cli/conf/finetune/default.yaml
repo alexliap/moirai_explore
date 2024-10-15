@@ -36,7 +36,7 @@ trainer:
     - _target_: lightning.pytorch.callbacks.LearningRateMonitor
       logging_interval: epoch
     - _target_: lightning.pytorch.callbacks.ModelCheckpoint
-      dirpath: null # ${hydra:runtime.output_dir}/checkpoints/${train_dataset_name}
+      dirpath: null
       monitor: val/PackedMSELoss
       save_weights_only: true
       mode: min
