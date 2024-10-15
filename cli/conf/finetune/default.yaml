@@ -1,19 +1,28 @@
 hydra:
   run:
-    dir: outputs/finetune/${hydra:runtime.choices.model}/${hydra:runtime.choices.data}/${run_name}
+    dir: outputs/finetune/${hydra:runtime.choices.model}/${run_name}
 defaults:
-  - model: moirai_1.0_R_small
-  - data: load_data
-  - val_data: load_data
+  - model: moirai_small
+  - data: null
+  - val_data: null
   - _self_
 run_name: null
 seed: 0
 tf32: true
 compile: false  # set to mode: default, reduce-overhead, max-autotune
-ckpt_path: null
+
+#### Iterative training arguments ####
+num_of_weeks: 12
+iter_step: 1
+######################################
+
+dataset_path: data/it_load_data_23_24.csv
+train_dataset_name: it_load_data_train
+val_dataset_name: it_load_data_eval
+model_dirpath: ${hydra:runtime.output_dir}/checkpoints/
 trainer:
   _target_: lightning.Trainer
-  accelerator: gpu
+  accelerator: cpu
   strategy: auto
   devices: auto
   num_nodes: 1
@@ -27,7 +36,7 @@ trainer:
     - _target_: lightning.pytorch.callbacks.LearningRateMonitor
       logging_interval: epoch
     - _target_: lightning.pytorch.callbacks.ModelCheckpoint
-      dirpath: ${hydra:runtime.output_dir}/checkpoints
+      dirpath: null # ${hydra:runtime.output_dir}/checkpoints/${train_dataset_name}
       monitor: val/PackedMSELoss
       save_weights_only: true
       mode: min
@@ -40,17 +49,17 @@ trainer:
       mode: min
       strict: false
       verbose: true
-  max_epochs: 40
+  max_epochs: 1
   enable_progress_bar: true
   accumulate_grad_batches: 1
   gradient_clip_val: 1.0
   gradient_clip_algorithm: norm
 train_dataloader:
   _target_: uni2ts.data.loader.DataLoader
-  batch_size: 24
-  batch_size_factor: 180
+  batch_size: 8
+  batch_size_factor: 1
   cycle: true
-  num_batches_per_epoch: 180
+  num_batches_per_epoch: 1
   shuffle: true
   num_workers: 8
   collate_fn:
@@ -66,8 +75,8 @@ train_dataloader:
   persistent_workers: true
 val_dataloader:
   _target_: uni2ts.data.loader.DataLoader
-  batch_size: 24
-  batch_size_factor: 180
+  batch_size: 8
+  batch_size_factor: 1
   cycle: false
   num_batches_per_epoch: null
   shuffle: false

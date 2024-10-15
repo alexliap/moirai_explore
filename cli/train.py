@@ -121,7 +121,7 @@ def main(cfg: DictConfig):
         assert cfg.trainer.precision == 32
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
-
+    # init Model
     model: L.LightningModule = instantiate(cfg.model, _convert_="all")
     
     # freeze everything
@@ -131,16 +131,15 @@ def main(cfg: DictConfig):
     for param in model.module.encoder.layers[-1].parameters():
         param.requires_grad = True
     
-    # # unfreeze weighted average weigths
-    # for param in model.module.param_proj.proj.weights_logits.parameters():
-    #     param.requires_grad = True
-    
     for param in model.module.param_proj.parameters():
         param.requires_grad = True
     
     if cfg.compile:
         model.module.compile(mode=cfg.compile)
+        
+    # init Trainer
     trainer: L.Trainer = instantiate(cfg.trainer)
+    
     train_dataset: Dataset = instantiate(cfg.data).load_dataset(
         model.train_transform_map
     )

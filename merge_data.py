@@ -1,23 +1,41 @@
 import pandas as pd
 
 
+def load_data(data_path: str, country_code: str) -> pd.DataFrame:
+    data = pd.read_csv(data_path, delimiter='\t')
+    if len(data.columns) == 1:
+        data = pd.read_csv(data_path, delimiter=',')
+        
+    if len(data.columns) == 1:
+        raise RuntimeError("Find the correct delimiter.")
+    
+    data = data.query(f"CountryCode == '{country_code}'").reset_index()
+    data = data.drop(["CreateDate", "UpdateDate", "CountryCode", "index", 
+                      "MeasureItem", "DateShort", "TimeFrom", "TimeTo",
+                      "Cov_ratio", "Value_ScaleTo100"], axis=1)
+    data['DateUTC'] = pd.to_datetime(data['DateUTC'], dayfirst=True)
+    
+    return data
+
+
 if __name__ == "__main__":
-    data_2023 = pd.read_csv('data/load_values_23.csv', delimiter='\t')
-    data_2023 = data_2023.query("CountryCode == 'GR'").reset_index()
-    data_2023 = data_2023.drop(["CreateDate", "UpdateDate", "CountryCode", "index", 
-                    "MeasureItem", "DateShort", "TimeFrom", "TimeTo",
-                    "Cov_ratio", "Value_ScaleTo100"], axis=1)
-    data_2023['DateUTC'] = pd.to_datetime(data_2023['DateUTC'], dayfirst=True)
-    data_2023.iloc[2018, 0] = pd.Timestamp(2023, 3, 26, 2)
+    # get data for Greece
+    gr_data_2023 = load_data('data/load_values_23.csv', country_code='GR')
+    gr_data_2023.iloc[2018, 0] = pd.Timestamp(2023, 3, 26, 2)
 
-    data_2024 = pd.read_csv('data/load_values_24.csv')
-    data_2024 = data_2024.query("CountryCode == 'GR'").reset_index()
-    data_2024 = data_2024.drop(["CreateDate", "UpdateDate", "CountryCode", "index", 
-                    "MeasureItem", "DateShort", "TimeFrom", "TimeTo",
-                    "Cov_ratio", "Value_ScaleTo100"], axis=1)
-    data_2024['DateUTC'] = pd.to_datetime(data_2024['DateUTC'], dayfirst=True)
-    data_2024.loc[len(data_2024.index)] = [pd.Timestamp(2024, 3, 31, 2), data_2024['Value'].mean()]
-    data_2024.loc[len(data_2024.index)] = [pd.Timestamp(2024, 3, 31, 3), data_2024['Value'].mean()]
-    data_2024 = data_2024.sort_values('DateUTC')
+    gr_data_2024 = load_data('data/load_values_24.csv', country_code='GR')
+    gr_data_2024.loc[len(gr_data_2024.index)] = [pd.Timestamp(2024, 3, 31, 2), gr_data_2024['Value'].mean()]
+    gr_data_2024.loc[len(gr_data_2024.index)] = [pd.Timestamp(2024, 3, 31, 3), gr_data_2024['Value'].mean()]
+    gr_data_2024 = gr_data_2024.sort_values('DateUTC')
+    
+    pd.concat([gr_data_2023, gr_data_2024]).set_index('DateUTC').to_csv("data/gr_load_data_23_24.csv")
+    
+    # get data for Italy
+    it_data_2023 = load_data('data/load_values_23.csv', country_code='IT')
+    it_data_2023.iloc[2018, 0] = pd.Timestamp(2023, 3, 26, 2)
 
-    pd.concat([data_2023, data_2024]).to_csv("data/load_data_23_24.csv", index=False)
+    it_data_2024 = load_data('data/load_values_24.csv', country_code='IT')
+    it_data_2024 = it_data_2024.sort_values('DateUTC')
+
+    pd.concat([it_data_2023, it_data_2024]).set_index('DateUTC').to_csv("data/it_load_data_23_24.csv")
+    
