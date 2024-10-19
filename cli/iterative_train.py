@@ -1,4 +1,5 @@
 import os
+import logging
 import hydra
 import torch
 import lightning
@@ -44,6 +45,23 @@ def calculate_batch_variables(offset: int):
     batch_size_factor = offset/max_batch_size
     
     return max_batch_size, batch_size_factor
+
+
+def prepare_model(cfg: DictConfig):
+    # init Model
+    model = instantiate(cfg.model, _convert_="all")
+    
+    # freeze everything
+    model.freeze()
+    
+    # unfreeze last encoder layer
+    for param in model.module.encoder.layers[-1].parameters():
+        param.requires_grad = True
+    
+    for param in model.module.param_proj.parameters():
+        param.requires_grad = True
+        
+    return model
 
 
 class DataModule(lightning.LightningDataModule):
@@ -137,28 +155,10 @@ class DataModule(lightning.LightningDataModule):
             config_path="cli/conf/finetune/", 
             config_name="default.yaml")
 def main(cfg: DictConfig):
-    MAX_BATCH: int = 256
-    
     if cfg.tf32:
         assert cfg.trainer.precision == 32
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
-        
-    # init Model
-    model = instantiate(cfg.model, _convert_="all")
-    
-    # freeze everything
-    model.freeze()
-    
-    # unfreeze last encoder layer
-    for param in model.module.encoder.layers[-1].parameters():
-        param.requires_grad = True
-    
-    for param in model.module.param_proj.parameters():
-        param.requires_grad = True
-    
-    if cfg.compile:
-        model.module.compile(mode=cfg.compile)
     
     # number of weeks where we will conduct iterative training (backtesting with refit)
     num_of_weeks = cfg.num_of_weeks
@@ -185,19 +185,20 @@ def main(cfg: DictConfig):
     )
     
     # create backtesting with refit loop
-    for i in range(1, num_of_weeks+1, iter_step):
+    for i in range(5, num_of_weeks+1, iter_step):
+        
         # same with train size
         offset = i*(7*24)
         
         batch_size, batch_size_factor = calculate_batch_variables(offset=offset)
         
-        # load train dataset
-        train_dataset = SimpleDatasetBuilder(dataset=f"{cfg.train_dataset_name}_{i}", weight=1000).load_dataset(
-            model.train_transform_map
-        )
-        
-        # load validation dataset
         with open_dict(cfg):
+            # get correct model
+            if i > 1:
+                prev_model = os.listdir(cfg.trainer.callbacks[1]['dirpath'])[0]
+                logging.info(f"Loading checkpoint from {cfg.trainer.callbacks[1]['dirpath']}")
+                cfg.model.checkpoint_path = os.path.join(cfg.trainer.callbacks[1]['dirpath'], prev_model)
+            
             cfg.dataset = f"{cfg.train_dataset_name}_{i}"
             cfg.trainer.callbacks[1]['dirpath'] = os.path.join(cfg.model_dirpath, cfg.dataset)
             cfg.val_data = make_val_yaml(dataset_name=cfg.val_dataset_name, offset=offset)
@@ -205,10 +206,20 @@ def main(cfg: DictConfig):
             cfg.train_dataloader.batch_size = batch_size
             cfg.train_dataloader.batch_size_factor = batch_size_factor
             cfg.train_dataloader.num_batches_per_epoch = int(batch_size_factor)
+                
+        model = prepare_model(cfg)
+        
+        if cfg.compile:
+            model.module.compile(mode=cfg.compile)
             
         # print(cfg)
         # continue
-            
+        
+        # load train dataset
+        train_dataset = SimpleDatasetBuilder(dataset=f"{cfg.train_dataset_name}_{i}", weight=1000).load_dataset(
+            model.train_transform_map
+        )
+        # load validation dataset
         val_dataset = (
             tree_map(
                 lambda ds: ds.load_dataset(model.val_transform_map),
@@ -223,6 +234,7 @@ def main(cfg: DictConfig):
         
         trainer.fit(model, datamodule=DataModule(cfg, train_dataset, val_dataset))
         
+        del model, train_dataset, val_dataset, trainer
         
 
 if __name__ == "__main__":
