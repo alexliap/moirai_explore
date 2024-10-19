@@ -13,33 +13,6 @@ from uni2ts.data.builder.simple import SimpleDatasetBuilder, SimpleEvalDatasetBu
 from uni2ts.data.loader import DataLoader
 
 
-# def load_data(data_path: str) -> pd.DataFrame:
-#     """Currently loads up to 1 year of the selected dataset.
-
-#     Args:
-#         data_path (str): Location of the dataset in CSV format.
-
-#     Returns:
-#         pd.DataFrame: Data with up to 1 year, with the datetime as index.
-#     """
-#     data = pd.read_csv(data_path)
-#     data = data.iloc[:8760, :]
-#     data = data.drop_duplicates('DateUTC')
-#     data['DateUTC'] = pd.to_datetime(data['DateUTC'])
-#     data = data.set_index('DateUTC')
-    
-#     return data
-
-
-# def load_state(finetuned_model_state: str, device: str):
-#     state_dict = torch.load(finetuned_model_state, weights_only=False, map_location=torch.device(device))['state_dict']
-#     # due to the state dict coming from a MoiraiFinetune Module the keys in the state dict have different names and error is raised
-#     # in order to deal with this issue I rename the keys
-#     state_dict = {'.'.join(key.split('.')[1:]):value for key, value in state_dict.items()}
-    
-#     return state_dict
-
-
 def make_val_yaml(dataset_name: str, offset: int, context_length: int = 720):
     if offset < context_length:
         context_length = offset
@@ -161,7 +134,7 @@ class DataModule(lightning.LightningDataModule):
 
 
 @hydra.main(version_base='1.3', 
-            config_path="/Users/alexanderliapatis/Desktop/Projects/moirai_explore/cli/conf/finetune/", 
+            config_path="cli/conf/finetune/", 
             config_name="default.yaml")
 def main(cfg: DictConfig):
     MAX_BATCH: int = 256

@@ -55,12 +55,13 @@ dev = [
   "hatch",
   "black[jupyter]==24.2.0",
   "isort",
-  "pre-commit",
+  "pre-commit"
 ]
 notebook = [
   "jupyter",
   "ipywidgets",
   "matplotlib",
+  "googledriver"
 ]
 build-lotsa = [
   "buildings_bench",

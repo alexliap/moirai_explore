@@ -22,14 +22,17 @@ fi
 curl -o "$DEST_DIR/load_values_23.csv" "$FILE_URL_1"
 curl -o "$DEST_DIR/load_values_24.csv" "$FILE_URL_2"
 
-echo "Merge data..."
-python -m merge_data
-
 # Inform the user that the download is complete
 echo "Files have been downloaded to $DEST_DIR"
 
+echo "Merge data..."
+python -m merge_data
+
+echo "Download Finetuned Models..."
+python -m download_models
+
 # Execute a Python command-line tool or script
 echo "Running Python command..."
-python -m uni2ts.data.builder.simple Load_Data data/load_data_23_24.csv --dataset_type wide --date_offset '2024-01-01 00:00:00'
+python -m uni2ts.data.builder.simple gr_load_data data/gr_load_data_23_24.csv --dataset_type wide --date_offset '2024-01-01 00:00:00'
 # Inform the user that the Python command has been executed
 echo "Python command executed successfully."

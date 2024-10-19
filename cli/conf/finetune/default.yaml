@@ -22,7 +22,7 @@ val_dataset_name: it_load_data_eval
 model_dirpath: ${hydra:runtime.output_dir}/checkpoints/
 trainer:
   _target_: lightning.Trainer
-  accelerator: cpu
+  accelerator: gpu
   strategy: auto
   devices: auto
   num_nodes: 1
