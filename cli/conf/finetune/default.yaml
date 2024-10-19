@@ -12,7 +12,7 @@ tf32: true
 compile: false  # set to mode: default, reduce-overhead, max-autotune
 
 #### Iterative training arguments ####
-num_of_weeks: 12
+num_of_weeks: 26
 iter_step: 1
 ######################################
 
@@ -60,7 +60,7 @@ train_dataloader:
   batch_size_factor: 1
   cycle: true
   num_batches_per_epoch: 1
-  shuffle: true
+  shuffle: false
   num_workers: 8
   collate_fn:
     _target_: uni2ts.data.loader.PackCollate
@@ -75,8 +75,8 @@ train_dataloader:
   persistent_workers: true
 val_dataloader:
   _target_: uni2ts.data.loader.DataLoader
-  batch_size: 8
-  batch_size_factor: 1
+  batch_size: 256
+  batch_size_factor: 10
   cycle: false
   num_batches_per_epoch: null
   shuffle: false

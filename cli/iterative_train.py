@@ -60,6 +60,19 @@ def make_val_yaml(dataset_name: str, offset: int, context_length: int = 720):
     return val_yaml
 
 
+def calculate_batch_variables(offset: int):
+    max_batch_size: int = 256
+    
+    # calculate correct batch_size
+    while offset < max_batch_size:
+        max_batch_size = int(max_batch_size/2)
+        
+    # caclulate correct batch_size_factor
+    batch_size_factor = offset/max_batch_size
+    
+    return max_batch_size, batch_size_factor
+
+
 class DataModule(lightning.LightningDataModule):
     def __init__(
         self,
@@ -151,6 +164,8 @@ class DataModule(lightning.LightningDataModule):
             config_path="/Users/alexanderliapatis/Desktop/Projects/moirai_explore/cli/conf/finetune/", 
             config_name="default.yaml")
 def main(cfg: DictConfig):
+    MAX_BATCH: int = 256
+    
     if cfg.tf32:
         assert cfg.trainer.precision == 32
         torch.backends.cuda.matmul.allow_tf32 = True
@@ -198,7 +213,10 @@ def main(cfg: DictConfig):
     
     # create backtesting with refit loop
     for i in range(1, num_of_weeks+1, iter_step):
+        # same with train size
         offset = i*(7*24)
+        
+        batch_size, batch_size_factor = calculate_batch_variables(offset=offset)
         
         # load train dataset
         train_dataset = SimpleDatasetBuilder(dataset=f"{cfg.train_dataset_name}_{i}", weight=1000).load_dataset(
@@ -211,8 +229,12 @@ def main(cfg: DictConfig):
             cfg.trainer.callbacks[1]['dirpath'] = os.path.join(cfg.model_dirpath, cfg.dataset)
             cfg.val_data = make_val_yaml(dataset_name=cfg.val_dataset_name, offset=offset)
             
+            cfg.train_dataloader.batch_size = batch_size
+            cfg.train_dataloader.batch_size_factor = batch_size_factor
+            cfg.train_dataloader.num_batches_per_epoch = int(batch_size_factor)
+            
         # print(cfg)
-        # break
+        # continue
             
         val_dataset = (
             tree_map(
