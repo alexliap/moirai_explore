@@ -32,4 +32,4 @@ beta1: 0.9
 beta2: 0.98
 num_training_steps: ${mul:${trainer.max_epochs},${train_dataloader.num_batches_per_epoch}}
 num_warmup_steps: 0
-checkpoint_path: outputs/finetune/moirai_1.0_R_small/Load_Data/champion/checkpoints/epoch=20-step=3780.ckpt
+checkpoint_path: Model Checkpoints/6th_run/checkpoints/epoch=20-step=3780.ckpt

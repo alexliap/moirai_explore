@@ -150,9 +150,9 @@ def main(cfg: DictConfig):
     # freeze everything
     model.freeze()
     
-    # # unfreeze last encoder layer
-    # for param in model.module.encoder.layers[-1].parameters():
-    #     param.requires_grad = True
+    # unfreeze last encoder layer
+    for param in model.module.encoder.layers[-1].parameters():
+        param.requires_grad = True
     
     for param in model.module.param_proj.parameters():
         param.requires_grad = True

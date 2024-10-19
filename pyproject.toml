@@ -61,7 +61,7 @@ notebook = [
   "jupyter",
   "ipywidgets",
   "matplotlib",
-  "googledriver"
+  "gdown"
 ]
 build-lotsa = [
   "buildings_bench",
