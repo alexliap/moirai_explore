@@ -185,7 +185,7 @@ def main(cfg: DictConfig):
     )
     
     # create backtesting with refit loop
-    for i in range(5, num_of_weeks+1, iter_step):
+    for i in range(1, num_of_weeks+1, iter_step):
         
         # same with train size
         offset = i*(7*24)

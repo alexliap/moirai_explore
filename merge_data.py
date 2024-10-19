@@ -36,6 +36,7 @@ if __name__ == "__main__":
 
     it_data_2024 = load_data('data/load_values_24.csv', country_code='IT')
     it_data_2024 = it_data_2024.sort_values('DateUTC')
+    it_data_2024.iloc[2162, 0] = pd.Timestamp(2024, 3, 31, 2)
 
     pd.concat([it_data_2023, it_data_2024]).set_index('DateUTC').to_csv("data/it_load_data_23_24.csv")
     
