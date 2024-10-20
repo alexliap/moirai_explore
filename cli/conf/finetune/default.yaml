@@ -14,7 +14,8 @@ compile: false  # set to mode: default, reduce-overhead, max-autotune
 #### Iterative training arguments ####
 num_of_weeks: 26
 iter_step: 1
-backtest: false
+refit: false
+thorough_train: true
 ######################################
 
 dataset_path: data/it_load_data_23_24.csv

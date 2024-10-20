@@ -44,14 +44,14 @@ def calculate_batch_variables(cfg: DictConfig, offset: int):
     # caclulate correct batch_size_factor
     batch_size_factor = offset/max_batch_size
 
-    if cfg.backtest:
+    if cfg.thorough_train:
         batch_size_factor = batch_size_factor/2        
     
     return max_batch_size, batch_size_factor
 
 
 def prepare_model(cfg: DictConfig):
-    # init Model
+    # init model
     model = instantiate(cfg.model, _convert_="all")
     
     # freeze everything
@@ -196,12 +196,12 @@ def main(cfg: DictConfig):
         batch_size, batch_size_factor = calculate_batch_variables(cfg, offset=offset)
         
         with open_dict(cfg):
-            if not cfg.backtest:
+            if cfg.thorough_train:
                 cfg.trainer.max_epochs = i
                 cfg.trainer.callbacks[2]['patience'] = int(i/2)
                 
             # get correct model
-            if cfg.backtest and i > 1:
+            if cfg.refit and i > 1:
                 prev_model = os.listdir(cfg.trainer.callbacks[1]['dirpath'])[0]
                 logging.info(f"Loading checkpoint from {cfg.trainer.callbacks[1]['dirpath']}")
                 cfg.model.checkpoint_path = os.path.join(cfg.trainer.callbacks[1]['dirpath'], prev_model)
