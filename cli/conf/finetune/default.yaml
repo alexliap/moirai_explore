@@ -14,6 +14,7 @@ compile: false  # set to mode: default, reduce-overhead, max-autotune
 #### Iterative training arguments ####
 num_of_weeks: 26
 iter_step: 1
+backtest: false
 ######################################
 
 dataset_path: data/it_load_data_23_24.csv
@@ -58,7 +59,7 @@ train_dataloader:
   _target_: uni2ts.data.loader.DataLoader
   batch_size: 8
   batch_size_factor: 1
-  cycle: false
+  cycle: true
   num_batches_per_epoch: 1
   shuffle: true
   num_workers: 0

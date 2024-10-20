@@ -24,7 +24,7 @@ def make_val_yaml(dataset_name: str, offset: int, context_length: int = 720):
             "_target_": "uni2ts.data.builder.simple.generate_eval_builders",
             "dataset": dataset_name,
             "offset": offset,
-            "eval_length": 2160,
+            "eval_length": 4320,
             "prediction_lengths": [168, 336, 504, 720],
             "context_lengths": [context_length],
             "patch_sizes": [32, 64],
@@ -34,7 +34,7 @@ def make_val_yaml(dataset_name: str, offset: int, context_length: int = 720):
     return val_yaml
 
 
-def calculate_batch_variables(offset: int):
+def calculate_batch_variables(cfg: DictConfig, offset: int):
     max_batch_size: int = 256
     
     # calculate correct batch_size
@@ -43,6 +43,9 @@ def calculate_batch_variables(offset: int):
         
     # caclulate correct batch_size_factor
     batch_size_factor = offset/max_batch_size
+
+    if cfg.backtest:
+        batch_size_factor = batch_size_factor/2        
     
     return max_batch_size, batch_size_factor
 
@@ -190,11 +193,15 @@ def main(cfg: DictConfig):
         # same with train size
         offset = i*(7*24)
         
-        batch_size, batch_size_factor = calculate_batch_variables(offset=offset)
+        batch_size, batch_size_factor = calculate_batch_variables(cfg, offset=offset)
         
         with open_dict(cfg):
+            if not cfg.backtest:
+                cfg.trainer.max_epochs = i
+                cfg.trainer.callbacks[2]['patience'] = int(i/2)
+                
             # get correct model
-            if i > 1:
+            if cfg.backtest and i > 1:
                 prev_model = os.listdir(cfg.trainer.callbacks[1]['dirpath'])[0]
                 logging.info(f"Loading checkpoint from {cfg.trainer.callbacks[1]['dirpath']}")
                 cfg.model.checkpoint_path = os.path.join(cfg.trainer.callbacks[1]['dirpath'], prev_model)
