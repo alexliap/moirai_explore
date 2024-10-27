@@ -200,7 +200,7 @@ def main(cfg: DictConfig):
                 cfg.model.module_kwargs.attn_dropout_p = 0.2
                 cfg.model.module_kwargs.dropout_p = 0.2
 
-            # get correct model
+            # get model from previous training iteration
             if cfg.refit and i > 1:
                 prev_model = os.listdir(cfg.trainer.callbacks[1]["dirpath"])[0]
                 logging.info(
