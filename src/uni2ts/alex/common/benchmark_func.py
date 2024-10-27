@@ -127,7 +127,7 @@ def get_run_metrics(
     num_samples: int = 100,
 ):
     models_perf = []
-    for i in range(1, 27):
+    for i in range(1, 53):
         try:
             num_of_weeks = i
             model, test_data = get_model_data(
