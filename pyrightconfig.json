@@ -8,6 +8,7 @@
     "reportMissingTypeStubs": false,
     "reportUnboundVariable": false,
     "reportAttributeAccessIssue": false,
+    "reportOptionalMemberAccess": false,
     "pythonVersion": "3.11",
     "pythonPlatform": "All",
     "executionEnvironments": [

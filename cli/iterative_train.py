@@ -17,7 +17,7 @@ from uni2ts.data.loader import DataLoader
 def make_val_yaml(dataset_name: str, offset: int, context_length: int = 720):
     if offset < context_length:
         context_length = offset
-        
+
     val_yaml = {
         "_target_": "uni2ts.data.builder.ConcatDatasetBuilder",
         "_args_": {
@@ -28,42 +28,42 @@ def make_val_yaml(dataset_name: str, offset: int, context_length: int = 720):
             "prediction_lengths": [168, 336, 504, 720],
             "context_lengths": [context_length],
             "patch_sizes": [32, 64],
-        }
+        },
     }
-    
+
     return val_yaml
 
 
 def calculate_batch_variables(cfg: DictConfig, offset: int):
     max_batch_size: int = 256
-    
+
     # calculate correct batch_size
     while offset < max_batch_size:
-        max_batch_size = int(max_batch_size/2)
-        
+        max_batch_size = int(max_batch_size / 2)
+
     # caclulate correct batch_size_factor
-    batch_size_factor = offset/max_batch_size
+    batch_size_factor = offset / max_batch_size
 
     if cfg.thorough_train:
-        batch_size_factor = batch_size_factor/2        
-    
+        batch_size_factor = batch_size_factor / 2
+
     return max_batch_size, batch_size_factor
 
 
 def prepare_model(cfg: DictConfig):
     # init model
     model = instantiate(cfg.model, _convert_="all")
-    
+
     # freeze everything
     model.freeze()
-    
+
     # unfreeze last encoder layer
     for param in model.module.encoder.layers[-1].parameters():
         param.requires_grad = True
-    
+
     for param in model.module.param_proj.parameters():
         param.requires_grad = True
-        
+
     return model
 
 
@@ -154,78 +154,84 @@ class DataModule(lightning.LightningDataModule):
         )
 
 
-@hydra.main(version_base='1.3', 
-            config_path="cli/conf/finetune/", 
-            config_name="default.yaml")
+@hydra.main(
+    version_base="1.3", config_path="cli/conf/finetune/", config_name="default.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.tf32:
         assert cfg.trainer.precision == 32
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
-    
+
     # number of weeks where we will conduct iterative training (backtesting with refit)
     num_of_weeks = cfg.num_of_weeks
     # the amount of weeks we will progress each time
     iter_step = cfg.iter_step
-    
+
     # build train & validation sets
-    for i in range(1, num_of_weeks+1, iter_step):
-        train_size = i*(7*24)
-        
-        SimpleDatasetBuilder(dataset=f"{cfg.train_dataset_name}_{i}").build_dataset(offset=train_size, 
-                                                                            dataset_type='wide',
-                                                                            file=cfg.dataset_path,
-                                                                            freq='H')
-        
-    SimpleEvalDatasetBuilder(dataset=cfg.val_dataset_name,
-                             offset=None,
-                             windows=None,
-                             distance=None,
-                             prediction_length=None,
-                             context_length=None,
-                             patch_size=None,).build_dataset(
-        file=cfg.dataset_path, dataset_type='wide', freq='H'
-    )
-    
+    for i in range(1, num_of_weeks + 1, iter_step):
+        train_size = i * (7 * 24)
+
+        SimpleDatasetBuilder(dataset=f"{cfg.train_dataset_name}_{i}").build_dataset(
+            offset=train_size, dataset_type="wide", file=cfg.dataset_path, freq="H"
+        )
+
+    SimpleEvalDatasetBuilder(
+        dataset=cfg.val_dataset_name,
+        offset=None,
+        windows=None,
+        distance=None,
+        prediction_length=None,
+        context_length=None,
+        patch_size=None,
+    ).build_dataset(file=cfg.dataset_path, dataset_type="wide", freq="H")
+
     # create backtesting with refit loop
-    for i in range(1, num_of_weeks+1, iter_step):
-        
+    for i in range(1, num_of_weeks + 1, iter_step):
         # same with train size
-        offset = i*(7*24)
-        
+        offset = i * (7 * 24)
+
         batch_size, batch_size_factor = calculate_batch_variables(cfg, offset=offset)
-        
+
         with open_dict(cfg):
             if cfg.thorough_train:
                 cfg.trainer.max_epochs = i
-                cfg.trainer.callbacks[2]['patience'] = int(i/2)
-                
+                cfg.trainer.callbacks[2]["patience"] = int(i / 2)
+
             # get correct model
             if cfg.refit and i > 1:
-                prev_model = os.listdir(cfg.trainer.callbacks[1]['dirpath'])[0]
-                logging.info(f"Loading checkpoint from {cfg.trainer.callbacks[1]['dirpath']}")
-                cfg.model.checkpoint_path = os.path.join(cfg.trainer.callbacks[1]['dirpath'], prev_model)
-            
+                prev_model = os.listdir(cfg.trainer.callbacks[1]["dirpath"])[0]
+                logging.info(
+                    f"Loading checkpoint from {cfg.trainer.callbacks[1]['dirpath']}"
+                )
+                cfg.model.checkpoint_path = os.path.join(
+                    cfg.trainer.callbacks[1]["dirpath"], prev_model
+                )
+
             cfg.dataset = f"{cfg.train_dataset_name}_{i}"
-            cfg.trainer.callbacks[1]['dirpath'] = os.path.join(cfg.model_dirpath, cfg.dataset)
-            cfg.val_data = make_val_yaml(dataset_name=cfg.val_dataset_name, offset=offset)
-            
+            cfg.trainer.callbacks[1]["dirpath"] = os.path.join(
+                cfg.model_dirpath, cfg.dataset
+            )
+            cfg.val_data = make_val_yaml(
+                dataset_name=cfg.val_dataset_name, offset=offset
+            )
+
             cfg.train_dataloader.batch_size = batch_size
             cfg.train_dataloader.batch_size_factor = batch_size_factor
             cfg.train_dataloader.num_batches_per_epoch = int(batch_size_factor)
-                
+
         model = prepare_model(cfg)
-        
+
         if cfg.compile:
             model.module.compile(mode=cfg.compile)
-            
+
         # print(cfg)
         # continue
-        
+
         # load train dataset
-        train_dataset = SimpleDatasetBuilder(dataset=f"{cfg.train_dataset_name}_{i}", weight=1000).load_dataset(
-            model.train_transform_map
-        )
+        train_dataset = SimpleDatasetBuilder(
+            dataset=f"{cfg.train_dataset_name}_{i}", weight=1000
+        ).load_dataset(model.train_transform_map)
         # load validation dataset
         val_dataset = (
             tree_map(
@@ -235,15 +241,14 @@ def main(cfg: DictConfig):
             if "val_data" in cfg
             else None
         )
-        
+
         # init Trainer
         trainer: lightning.Trainer = instantiate(cfg.trainer)
-        
+
         trainer.fit(model, datamodule=DataModule(cfg, train_dataset, val_dataset))
-        
+
         del model, train_dataset, val_dataset, trainer
-        
+
 
 if __name__ == "__main__":
     main()
-    

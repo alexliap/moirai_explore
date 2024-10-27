@@ -60,9 +60,12 @@ dev = [
 notebook = [
   "jupyter",
   "ipywidgets",
-  "matplotlib",
+  "matplotlib"
+]
+alex = [
   "gdown",
-  "pyright"
+  "pyright",
+  "ruff"
 ]
 build-lotsa = [
   "buildings_bench",
