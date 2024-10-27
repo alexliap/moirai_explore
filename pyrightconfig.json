@@ -1,0 +1,21 @@
+{
+    "include": ["src/"],
+    "exclude": ["**/node_modules", "**/__pycache__"],
+    "defineConstant": {
+      "DEBUG": true
+    },
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+    "reportUnboundVariable": false,
+    "reportAttributeAccessIssue": false,
+    "pythonVersion": "3.11",
+    "pythonPlatform": "All",
+    "executionEnvironments": [
+      {
+        "root": "src/",
+        "pythonVersion": "3.11",
+        "pythonPlatform": "All",
+        "extraPaths": [".venv/lib/python3.11/site-packages/"]
+      }
+    ]
+  }
