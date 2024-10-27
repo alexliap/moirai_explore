@@ -197,6 +197,8 @@ def main(cfg: DictConfig):
             if cfg.thorough_train:
                 cfg.trainer.max_epochs = i
                 cfg.trainer.callbacks[2]["patience"] = int(i / 2)
+                cfg.model.module_kwargs.attn_dropout_p = 0.2
+                cfg.model.module_kwargs.dropout_p = 0.2
 
             # get correct model
             if cfg.refit and i > 1:
@@ -208,10 +210,12 @@ def main(cfg: DictConfig):
                     cfg.trainer.callbacks[1]["dirpath"], prev_model
                 )
 
+            # change the directory where the model is saved each time based on the week we are in
             cfg.dataset = f"{cfg.train_dataset_name}_{i}"
             cfg.trainer.callbacks[1]["dirpath"] = os.path.join(
                 cfg.model_dirpath, cfg.dataset
             )
+            # make validation dataset
             cfg.val_data = make_val_yaml(
                 dataset_name=cfg.val_dataset_name, offset=offset
             )
@@ -226,7 +230,7 @@ def main(cfg: DictConfig):
             model.module.compile(mode=cfg.compile)
 
         # print(cfg)
-        # continue
+        # break
 
         # load train dataset
         train_dataset = SimpleDatasetBuilder(
