@@ -1,7 +1,8 @@
 import os
+import numpy as np
 import pandas as pd
 from gluonts.dataset.pandas import PandasDataset
-from gluonts.dataset.split import split
+from gluonts.dataset.split import split, TestData
 from gluonts.ev.metrics import MAE, MAPE
 from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
 from uni2ts.eval_util.evaluation import evaluate_model
@@ -117,7 +118,19 @@ def get_model_perf(
     return metrics
 
 
-def get_run_metrics(
+def get_eval_foreasts(model: MoiraiForecast, test_data: TestData, batch_size: int = 168):
+    predictor = model.create_predictor(batch_size=batch_size)
+    forecasts = predictor.predict(test_data.input)
+    
+    target_values = np.stack([target['target'] for target in list(test_data.label)])
+    # shape NUM_WINDOWS, NUM_SAMPLES, PREDICTION_LENGTH
+    # samples predictions at columns, i.e. [:, 0] forecasts for 1st time step, [:, 1] forecasts for 2nd time step, 
+    forecast_samples = np.stack([sample.samples for sample in list(forecasts)])
+    
+    return forecast_samples, target_values
+    
+
+def get_metrics(
     model_folder: str,
     prediction_lenght: int,
     data: pd.DataFrame,
