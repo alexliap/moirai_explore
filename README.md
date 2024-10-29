@@ -12,5 +12,6 @@
     - Refit with one backward pass
     - Use the same starting model at each training iteration
     - 
-  - [ ] Experiment with different ways fo evaluation/visualization
+  - [ ] Experiment with different ways of evaluation/visualization
+    - [x] Get forecasts and targets, in order to calculate whichever metric
 
