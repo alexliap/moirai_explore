@@ -1,15 +1,17 @@
-import os
 import logging
-import hydra
-import torch
-import lightning
+import os
 from functools import partial
-from omegaconf import DictConfig, open_dict
 from typing import Callable, Optional
+
+import hydra
+import lightning
+import torch
 from hydra.utils import instantiate
-from uni2ts.common import hydra_util
+from omegaconf import DictConfig, open_dict
 from torch.utils._pytree import tree_map
 from torch.utils.data import Dataset, DistributedSampler
+
+from uni2ts.common import hydra_util
 from uni2ts.data.builder.simple import SimpleDatasetBuilder, SimpleEvalDatasetBuilder
 from uni2ts.data.loader import DataLoader
 
@@ -220,10 +222,12 @@ def main(cfg: DictConfig):
             cfg.val_data = make_val_yaml(
                 dataset_name=cfg.val_dataset_name, offset=offset
             )
-            
+
             cfg.train_dataloader.batch_size = batch_size
             cfg.train_dataloader.batch_size_factor = batch_size_factor
-            cfg.train_dataloader.num_batches_per_epoch = int(torch.ceil(torch.tensor(batch_size_factor)).item())
+            cfg.train_dataloader.num_batches_per_epoch = int(
+                torch.ceil(torch.tensor(batch_size_factor)).item()
+            )
 
         model = prepare_model(cfg)
 

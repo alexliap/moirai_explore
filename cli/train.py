@@ -123,23 +123,23 @@ def main(cfg: DictConfig):
         torch.backends.cudnn.allow_tf32 = True
     # init Model
     model: L.LightningModule = instantiate(cfg.model, _convert_="all")
-    
+
     # freeze everything
     model.freeze()
-    
+
     # unfreeze last encoder layer
     for param in model.module.encoder.layers[-1].parameters():
         param.requires_grad = True
-    
+
     for param in model.module.param_proj.parameters():
         param.requires_grad = True
-    
+
     if cfg.compile:
         model.module.compile(mode=cfg.compile)
-        
+
     # init Trainer
     trainer: L.Trainer = instantiate(cfg.trainer)
-    
+
     train_dataset: Dataset = instantiate(cfg.data).load_dataset(
         model.train_transform_map
     )

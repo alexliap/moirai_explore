@@ -1,11 +1,13 @@
 import os
+
 import numpy as np
 import pandas as pd
 from gluonts.dataset.pandas import PandasDataset
-from gluonts.dataset.split import split, TestData
+from gluonts.dataset.split import TestData, split
 from gluonts.ev.metrics import MAE, MAPE
-from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
+
 from uni2ts.eval_util.evaluation import evaluate_model
+from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
 
 
 def moving_average(array: np.ndarray, window_size: int):
