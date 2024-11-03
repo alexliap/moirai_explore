@@ -65,7 +65,7 @@ notebook = [
 alex = [
   "gdown",
   "pyright",
-  "ruff"
+  "pre-commit"
 ]
 build-lotsa = [
   "buildings_bench",

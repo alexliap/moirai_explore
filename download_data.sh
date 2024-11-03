@@ -4,6 +4,9 @@
 
 python -m pip install -e '.[notebook, alex]'
 
+echo "Install pre-commit ..."
+pre-commit install
+
 echo "CUSTOM_DATA_PATH=custom_data" >> .env
 
 # Define the URLs for the files to download
