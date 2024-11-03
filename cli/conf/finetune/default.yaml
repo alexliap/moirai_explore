@@ -12,10 +12,10 @@ tf32: true
 compile: false  # set to mode: default, reduce-overhead, max-autotune
 
 #### Iterative training arguments ####
-num_of_weeks: 26
+num_of_weeks: 52
 iter_step: 1
 refit: false
-thorough_train: true
+thorough_train: True
 ######################################
 
 dataset_path: data/it_load_data_23_24.csv
@@ -30,6 +30,7 @@ trainer:
   num_nodes: 1
   precision: 32
   num_sanity_val_steps: 0
+  check_val_every_n_epoch: 1
   logger:
       _target_: lightning.pytorch.loggers.TensorBoardLogger
       save_dir: ${hydra:runtime.output_dir}
@@ -47,7 +48,7 @@ trainer:
     - _target_: lightning.pytorch.callbacks.EarlyStopping
       monitor: val/PackedMSELoss
       min_delta: 1000
-      patience: 15
+      patience: 10
       mode: min
       strict: false
       verbose: true

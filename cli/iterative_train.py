@@ -215,14 +215,15 @@ def main(cfg: DictConfig):
             cfg.trainer.callbacks[1]["dirpath"] = os.path.join(
                 cfg.model_dirpath, cfg.dataset
             )
+            logging.info(cfg.trainer.callbacks[1]["dirpath"])
             # make validation dataset
             cfg.val_data = make_val_yaml(
                 dataset_name=cfg.val_dataset_name, offset=offset
             )
-
+            
             cfg.train_dataloader.batch_size = batch_size
             cfg.train_dataloader.batch_size_factor = batch_size_factor
-            cfg.train_dataloader.num_batches_per_epoch = int(batch_size_factor)
+            cfg.train_dataloader.num_batches_per_epoch = int(torch.ceil(torch.tensor(batch_size_factor)).item())
 
         model = prepare_model(cfg)
 
