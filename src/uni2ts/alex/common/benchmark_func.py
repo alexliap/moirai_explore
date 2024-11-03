@@ -8,6 +8,31 @@ from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
 from uni2ts.eval_util.evaluation import evaluate_model
 
 
+def moving_average(array: np.ndarray, window_size: int):
+    window_size = window_size
+
+    i = 0
+    # Initialize an empty list to store moving averages
+    moving_averages = []
+
+    # Loop through the array t o
+    # consider every window of size 3
+    while i < len(array) - window_size + 1:
+        # Calculate the average of current window
+        window_average = round(np.sum(array[i : i + window_size]) / window_size, 2)
+
+        # Store the average of current
+        # window in moving average list
+        moving_averages.append(window_average)
+
+        # Shift window to right by one position
+        i += 1
+
+    moving_averages = np.array(moving_averages)
+
+    return moving_averages
+
+
 def load_pretrained(
     size: str,
     prediction_lenght: int,
@@ -118,17 +143,87 @@ def get_model_perf(
     return metrics
 
 
-def get_eval_foreasts(model: MoiraiForecast, test_data: TestData, batch_size: int = 168):
+def get_eval_foreasts(
+    model: MoiraiForecast, test_data: TestData, batch_size: int = 168
+):
     predictor = model.create_predictor(batch_size=batch_size)
     forecasts = predictor.predict(test_data.input)
-    
-    target_values = np.stack([target['target'] for target in list(test_data.label)])
+
+    target_values = np.stack([target["target"] for target in list(test_data.label)])
     # shape NUM_WINDOWS, NUM_SAMPLES, PREDICTION_LENGTH
-    # samples predictions at columns, i.e. [:, 0] forecasts for 1st time step, [:, 1] forecasts for 2nd time step, 
+    # samples predictions at columns, i.e. [:, 0] forecasts for 1st time step, [:, 1] forecasts for 2nd time step,
     forecast_samples = np.stack([sample.samples for sample in list(forecasts)])
-    
+
     return forecast_samples, target_values
-    
+
+
+def get_metrics_v2(
+    model_folder: str, data: pd.DataFrame, weeks_lim: int
+) -> dict[str, list[np.ndarray]]:
+    """Get the forecasted distributions per time step and the target. Afterwards, compute
+    absolute percentage errors of the mean, median, 97.5th and 2.5th percentile of each
+    forecasted distributions for each model in the model_folder.
+
+    Args:
+        model_folder (str): Folder where the respective models (1 model per week of available data) are located.
+        data (pd.DataFrame): The dataset based on which evaluation is going to be performed.
+        weeks_lim (int): Limit the number of weeks, i.e. models, to compute metrics for.
+
+    Returns:
+        metrics: Dictionary consisting of 4 lists: mean of forecasted distributions, median, 97.5th percentile, 2.5th percentile.
+                 Every item in a list corresponds to 1 model, so that the length of each the list equals the number of model evaluated.
+    """
+    metrics = {"mean": [], "median": [], "lower_0025": [], "upper_0975": []}
+    for i in range(1, weeks_lim + 1):
+        try:
+            model, test_data = get_model_data(
+                model_folder=model_folder,
+                prediction_lenght=168,
+                num_of_weeks=i,
+                data=data,
+                patch_size="auto",
+                num_samples=500,
+            )
+
+            forecast_samples, target_values = get_eval_foreasts(model, test_data)
+
+            # absolute error of the average forecast of each time step
+            mean_error_ts = (
+                np.mean(forecast_samples, axis=1).flatten() - target_values.flatten()
+            ) / target_values.flatten()
+            mean_error_ts = np.abs(mean_error_ts)
+
+            # absolute error of the median forecast of each time step
+            median_error_ts = (
+                np.quantile(forecast_samples, 0.5, axis=1).flatten()
+                - target_values.flatten()
+            ) / target_values.flatten()
+            median_error_ts = np.abs(median_error_ts)
+
+            # absolute error of the 97.5th percentile forecast of each time step
+            upper_error_ts = (
+                np.quantile(forecast_samples, 0.975, axis=1).flatten()
+                - target_values.flatten()
+            ) / target_values.flatten()
+            upper_error_ts = np.abs(upper_error_ts)
+
+            # absolute error of the 2.5th percentile forecast of each time step
+            lower_error_ts = (
+                np.quantile(forecast_samples, 0.025, axis=1).flatten()
+                - target_values.flatten()
+            ) / target_values.flatten()
+            lower_error_ts = np.abs(lower_error_ts)
+
+            metrics["mean"].append(mean_error_ts)
+            metrics["median"].append(median_error_ts)
+            metrics["lower_0025"].append(lower_error_ts)
+            metrics["upper_0975"].append(upper_error_ts)
+
+        except:
+            pass
+
+    return metrics
+
 
 def get_metrics(
     model_folder: str,
