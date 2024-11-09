@@ -31,8 +31,8 @@ echo "Files have been downloaded to $DEST_DIR"
 echo "Merge data ..."
 python -m merge_data
 
-echo "Download Finetuned Models ..."
-python -m download_models
+# echo "Download Finetuned Models ..."
+# python -m download_models
 
 # Execute a Python command-line tool or script
 echo "Running Python command ..."

@@ -2,7 +2,7 @@ hydra:
   run:
     dir: outputs/finetune/${hydra:runtime.choices.model}/${run_name}
 defaults:
-  - model: moirai_small
+  - model: moirai_1.0_R_small
   - data: null
   - val_data: null
   - _self_
@@ -15,7 +15,7 @@ compile: false  # set to mode: default, reduce-overhead, max-autotune
 num_of_weeks: 52
 iter_step: 1
 refit: false
-thorough_train: True
+thorough_train: true
 ######################################
 
 dataset_path: data/it_load_data_23_24.csv
@@ -48,7 +48,7 @@ trainer:
     - _target_: lightning.pytorch.callbacks.EarlyStopping
       monitor: val/PackedMSELoss
       min_delta: 1000
-      patience: 10
+      patience: 1
       mode: min
       strict: false
       verbose: true
